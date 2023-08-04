@@ -6,6 +6,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +31,7 @@ public class TagFrame extends JFrame {
     private JTextArea extractedTagsTextArea;
     private JButton textFileButton;
     private JButton stopWordButton;
+    private JButton runExtractButton;
     private ActionListener listener;
 
 
@@ -46,13 +48,14 @@ public class TagFrame extends JFrame {
 
     class ChoiceListener implements ActionListener {
         public void actionPerformed(ActionEvent event) {
-           loadFile();
+            loadFile();
         }
     }
 
     public void createControlPanel() {
         JPanel fileReadPanel = createFileRead();
         JPanel stopWordPanel = createStopWord();
+        JPanel runExtractPanel = createRunExtract();
         JPanel extractedTagsPanel = createExtractedTags();
 
         // Line up component panels
@@ -61,6 +64,7 @@ public class TagFrame extends JFrame {
         controlPanel.setLayout(new GridLayout(2, 2));
         controlPanel.add(fileReadPanel);
         controlPanel.add(stopWordPanel);
+        controlPanel.add(runExtractPanel);
         controlPanel.add(extractedTagsPanel);
 
         // Add panels to content pane
@@ -80,7 +84,7 @@ public class TagFrame extends JFrame {
         });
         panel.add(textFileButton);
 
-        panel.setBorder(new TitledBorder(new EtchedBorder(), "Read File"));
+        panel.setBorder(new TitledBorder(new EtchedBorder(), "Load Text File"));
 
         return panel;
     }
@@ -88,7 +92,14 @@ public class TagFrame extends JFrame {
 
     public JPanel createStopWord() {
         JPanel panel = new JPanel();
-        stopWordButton = new JButton("Choose Stop Word File");
+        stopWordButton = new JButton("Load Stop Word File");
+        stopWordButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadFile();
+            }
+        });
+
         panel.add(stopWordButton);
         panel.setBorder(new TitledBorder(new EtchedBorder(), "Stop Word"));
 
@@ -105,36 +116,44 @@ public class TagFrame extends JFrame {
         return panel;
     }
 
-    public void loadFile()
+    public JPanel createRunExtract() {
+        JPanel panel = new JPanel();
+        runExtractButton = new JButton("Extract Tags");
+        runExtractButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                runExtract();
+            }
+        });
+
+        panel.add(runExtractButton);
+        return panel;
+    }
+
+    public void runExtract()
     {
         selectedFile = chooser.getSelectedFile();
-        Path file = selectedFile.toPath();
+        Path file = Paths.get(workingDirectory.getPath() + "\\src\\");
+
         try (Stream<String> lines = Files.lines(file))
         {
-            // Map<BigDecimal, List<Item>> groupByPriceMap =
-            //			items.stream().collect(Collectors.groupingBy(Item::getPrice));
-
             lines.forEach(l ->
                     {
                         String[] words = l.split(" ");
                         String w;
                         for (String x : words) {
 
-                            w = x.toLowerCase().trim();  // Nomalize the words to lower case
+                            w = x.toLowerCase().trim();
                             w = w.replaceAll("_", " ").trim();
-                            w = w.replaceAll("[\\W]", "");  // should delete non Alhpanumberics
-                            w = w.replaceAll("[\\d]", "");  // should delete digits
+                            w = w.replaceAll("[\\W]", "");
+                            w = w.replaceAll("[\\d]", "");
 
                             System.out.println("Scrapped: " + w);
 
                             if (!isNoiseWord(w)) {
-                                //indexMap.add(w.substring(0, 1));
-                                // Maybe use MERGE here instead
                                 if (indexMap.containsKey(w.substring(0, 1))) {
-                                    // get the sublist and add the new instance to it
                                     indexMap.get(w.substring(0, 1)).add(w);
                                 } else {
-                                    // add a new key and list with one element
                                     List<String> tl = new LinkedList<String>();
                                     tl.add(w);
                                     indexMap.put(w.substring(0, 1), tl);
@@ -144,40 +163,92 @@ public class TagFrame extends JFrame {
                     }
             );
 
-        }  // file is closed here
-        catch (IOException e)
-        {
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
 
-        // System.out.println(indexMap);
 
-           /*
-              Display the map instead of dumping it
-
-              Get the set of keys and traverse them
-              for each key Display the key as a heading
-              Then display the list stored for this key.
-             */
         keySet = indexMap.keySet();
-        for(String k:keySet)
-        {
+        for (String k : keySet) {
             System.out.println("Group " + k);
 
-            for(String s: indexMap.get(k))
-            {
+            for (String s : indexMap.get(k)) {
                 System.out.println("\t" + s);
             }
         }
 
-
-
+        extractedTagsTextArea.append(keySet.toString());
 
 
     }
-        else
+
+    public void loadFile() {
+        chooser.setCurrentDirectory(workingDirectory);
+
+        if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            selectedFile = chooser.getSelectedFile();
+            Path file = Paths.get(workingDirectory.getPath() + "\\src\\");
+        }
+        else{
+            System.out.println("Must choose a file to process!");
+        }
+
+
+    }
+
+    public static boolean isNoiseWord(String word)
     {
-        System.out.println("Must choose a file to process!");
-    }
+        if(noiseWords.isEmpty())
+        {
+            loadNoiseWords();
+        }
 
+        System.out.print("\tTesting : " + word + "\t");
+
+        if(word.length() < 2)
+        {
+            System.out.println(" len < 2");
+            return true;
+        }
+        else if(noiseWords.contains(word))
+        {
+            System.out.println(" in Lexicon");
+            return true;
+        }
+        else
+        {
+            System.out.println("Keyword!");
+            return false;
+        }
+
+    }
+    public static void loadNoiseWords()
+    {
+        File workingDirectory = new File(System.getProperty("user.dir"));
+        Path file = Paths.get(workingDirectory.getPath() + "\\src\\" + "English Stop Words.txt");
+
+
+        try(Stream<String> lines = Files.lines(file))
+        {
+            noiseWords = lines.collect(Collectors.toSet());
+        }
+        catch (IOException e)
+        {
+            System.out.println("Failed to open the moise word file");
+            e.printStackTrace();
+        }
+
+
+        for(String n:noiseWords)
+            System.out.println();
+
+        if(noiseWords.isEmpty()) {
+            System.out.println("Error Noise word filter is empty.");
+        }
+        else
+        {
+            System.out.println("Noise Words File Loaded");
+        }
+    }
 }
