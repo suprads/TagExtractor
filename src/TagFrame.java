@@ -39,7 +39,6 @@ public class TagFrame extends JFrame {
      * Constructs the frame.
      */
     public TagFrame() {
-        // This listener is shared among all components
         listener = new ChoiceListener();
 
         createControlPanel();
@@ -58,16 +57,12 @@ public class TagFrame extends JFrame {
         JPanel runExtractPanel = createRunExtract();
         JPanel extractedTagsPanel = createExtractedTags();
 
-        // Line up component panels
-
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(new GridLayout(2, 2));
         controlPanel.add(fileReadPanel);
         controlPanel.add(stopWordPanel);
         controlPanel.add(runExtractPanel);
         controlPanel.add(extractedTagsPanel);
-
-        // Add panels to content pane
 
         add(controlPanel, BorderLayout.SOUTH);
     }
