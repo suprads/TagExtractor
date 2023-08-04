@@ -70,7 +70,7 @@ public class TagFrame extends JFrame {
 
     public JPanel createFileRead() {
         JPanel panel = new JPanel();
-        textFileButton = new JButton("Choose Text File");
+        textFileButton = new JButton("Load Text File");
 
         textFileButton.addActionListener(new ActionListener() {
             @Override
@@ -107,7 +107,7 @@ public class TagFrame extends JFrame {
         extractedTagsTextArea = new JTextArea();
         extractedTagsTextArea.setSize(200, 200);
         panel.add(extractedTagsTextArea);
-        panel.setBorder(new TitledBorder(new EtchedBorder(), "Extracted"));
+        panel.setBorder(new TitledBorder(new EtchedBorder(), "Extracted Tags"));
 
         return panel;
     }
@@ -123,6 +123,7 @@ public class TagFrame extends JFrame {
         });
 
         panel.add(runExtractButton);
+        panel.setBorder(new TitledBorder(new EtchedBorder(), "Run"));
         return panel;
     }
 
