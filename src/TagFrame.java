@@ -47,7 +47,8 @@ public class TagFrame extends JFrame {
 
     class ChoiceListener implements ActionListener {
         public void actionPerformed(ActionEvent event) {
-            loadFile();
+            loadTextFile();
+            loadStopFile();
         }
     }
 
@@ -74,7 +75,7 @@ public class TagFrame extends JFrame {
         textFileButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                loadFile();
+                loadTextFile();
             }
         });
         panel.add(textFileButton);
@@ -91,7 +92,7 @@ public class TagFrame extends JFrame {
         stopWordButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                loadFile();
+                loadStopFile();
             }
         });
 
@@ -173,17 +174,31 @@ public class TagFrame extends JFrame {
             }
         }
 
-        extractedTagsTextArea.append(keySet.toString());
+        extractedTagsTextArea.append(indexMap.toString());
 
 
     }
 
-    public void loadFile() {
+    public void loadTextFile() {
         chooser.setCurrentDirectory(workingDirectory);
 
         if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
             selectedFile = chooser.getSelectedFile();
-            Path file = Paths.get(workingDirectory.getPath() + "\\src\\");
+            Path textFile = Paths.get(workingDirectory.getPath() + "\\src\\");
+        }
+        else{
+            System.out.println("Must choose a file to process!");
+        }
+
+
+    }
+
+    public void loadStopFile() {
+        chooser.setCurrentDirectory(workingDirectory);
+
+        if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            selectedFile = chooser.getSelectedFile();
+            Path stopFile = Paths.get(workingDirectory.getPath() + "\\src\\");
         }
         else{
             System.out.println("Must choose a file to process!");
@@ -218,13 +233,14 @@ public class TagFrame extends JFrame {
         }
 
     }
+
     public static void loadNoiseWords()
     {
         File workingDirectory = new File(System.getProperty("user.dir"));
-        Path file = Paths.get(workingDirectory.getPath() + "\\src\\" + "English Stop Words.txt");
+        Path stopFile = Paths.get(workingDirectory.getPath() + "\\src\\" + "English Stop Words.txt");
 
 
-        try(Stream<String> lines = Files.lines(file))
+        try(Stream<String> lines = Files.lines(stopFile))
         {
             noiseWords = lines.collect(Collectors.toSet());
         }
